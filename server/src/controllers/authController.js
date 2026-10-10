@@ -6,6 +6,14 @@ import generateOtp
  import sendEmail from "../utils/sendEmail.js";
  import generateToken from "../utils/generateToken.js";
  const MAX_OTP_ATTEMPTS=5;
+ const buildAuthResponse=(user)=>({
+  token:generateToken(user._id),
+  user:{
+    _id:user._id,name:user.name,email:user.email,avatar:user.avatar
+  }
+ })
+
+ 
  export const register = async (req,res)=>{
   try{
 const {name,email,password}=req.body;
@@ -87,10 +95,7 @@ await user.save();
 await Otp.deleteMany({
   email:cleanEmail,purpose:"register"
 })
-const token=generateToken(user._id);
-res.json({
-  token,user:{_id:user._id,name:user.name,email:user.email,avatar:user.avatar}
-});
+res.json(buildAuthResponse(user));
 }
 catch(error){
   console.error("VerifyOtp error",error.message);
@@ -98,3 +103,36 @@ catch(error){
   
 }
  }
+ export const login =async (req,res)=>{
+  try{
+const {email,password}=req.body;
+if(!email || !password){
+  return res.status(400).json({
+    message:"Email and Password is required"
+  });
+}
+const cleanEmail=email.toLowerCase().trim();
+const user=await User.findOne({email:cleanEmail}).select("+password");
+if(!user){
+  return res.status(401).json({
+    message:"Invalid email or password"
+  });}
+  if(!user.password){
+    return res.status(400).json({message:"This account uses Google login. Please continue with google."});
+  }
+const isMatch=await bcrypt.compare(password,user.password);
+if(!isMatch){
+  return res.status(401).json({message:"Invalid email or password"})
+}
+if(!user.isVerified){
+  return res.status(403).json({message:"Please verify your email first"});
+}
+res.json(buildAuthResponse(user));
+  }
+  catch(error){
+    console.error("login error:",error.message);
+
+    return res.status(500).json({message:"Login failed. Please try again"})
+  }
+ }
+
