@@ -6,13 +6,33 @@ import generateOtp
  import sendEmail from "../utils/sendEmail.js";
  import generateToken from "../utils/generateToken.js";
  const MAX_OTP_ATTEMPTS=5;
+ const OTP_EXPIRY_MINUTES = 10;
+const OTP_RESEND_COOLDOWN_SECONDS = 60;
  const buildAuthResponse=(user)=>({
   token:generateToken(user._id),
   user:{
     _id:user._id,name:user.name,email:user.email,avatar:user.avatar
   }
  })
-
+const issueOtp=async(email,purpose)=>{
+  const otp=generateOtp();
+  const otpHash=await bcrypt.hash(otp,10);
+  await Otp.deleteMany({email,purpose});
+  await Otp.create({
+    email,otpHash,purpose,expiresAt:new Date(Date.now()+OTP_EXPIRY_MINUTES*60*1000)
+  })
+  const subject =purpose==="register"? "Verify your email-Chat App":"Reset your password - Chat App";
+  await sendEmail(email,subject,   `<p>Your Chat App code is:</p><h2>${otp}</h2><p>This code expires in ${OTP_EXPIRY_MINUTES} minutes.</p>`)
+}
+const getCooldownLeft= async (email,purpose)=>{
+const lastOtp=await Otp.findOne({email,purpose});
+if(!lastOtp){
+  return 0;
+}
+const secondsPassed=(Date.now()-lastOtp.createdAt.getTime())/1000;
+const secondsLeft=Math.ceil(OTP_RESEND_COOLDOWN_SECONDS-secondsPassed);
+return secondsLeft>0?secondsLeft:0;
+}
  
  export const register = async (req,res)=>{
   try{
@@ -32,6 +52,11 @@ if(!name|| !email || !password){
     })
 
   }
+  const cooldownLeft=await getCooldownLeft(cleanEmail,"register");
+    if(cooldownLeft>0){
+return res.status(429).json({message:`Please wait ${cooldownLeft} seconds before request a new OTP`});
+    }
+  
   const hashedPassword=await bcrypt.hash(password,10);
   if(existingUser){
     existingUser.name=name;
@@ -41,17 +66,8 @@ if(!name|| !email || !password){
   else{
     await User.create({name,email:cleanEmail,password:hashedPassword});
   }
-  const otp=generateOtp();
-  const otpHash=await bcrypt.hash(otp,10);
-  await Otp.deleteMany({email:cleanEmail,purpose:"register"});
-  await Otp.create({
-    email:cleanEmail,otpHash,purpose:"register",expiresAt:new Date(Date.now()+10*60*1000)
-  });
-  await sendEmail(
-    cleanEmail,"Verify your email-Chat App",`<p>Your Chat App verification code is: </p><h2>${otp}</h2><p>This code expires in 10 minutes.</p>`
-    
-  )
-  res.status(201).json({message:"OTP sent to your gmail"});
+  await issueOtp(cleanEmail,"register");
+   res.status(201).json({ message: "OTP sent to your email" });
   }
   catch(error){
     console.error("register error :",error.message);
@@ -133,6 +149,35 @@ res.json(buildAuthResponse(user));
     console.error("login error:",error.message);
 
     return res.status(500).json({message:"Login failed. Please try again"})
+  }
+ }
+ export const resendOtp=async (req,res)=>{
+  try{
+const {email}=req.body;
+if(!email){
+  return res.status(400).json({
+    message:"Email is required"
+  });
+ 
+} const cleanEmail=email.toLowerCase().trim();
+const user=await User.findOne({email:cleanEmail});
+if(!user){
+  return res.status(404).json({
+    message:"No account found. Please register"
+  });
+}
+if(user.isVerified){
+  return res.status(400).json({message:"Email already verified. Please login"});}
+  const cooldownLeft=await getCooldownLeft(cleanEmail,"register");
+if (cooldownLeft > 0) {
+      return res.status(429).json({ message: `Please wait ${cooldownLeft} seconds before requesting a new OTP` });
+    }
+    await issueOtp(cleanEmail,"register");
+       res.json({ message: "A new OTP has been sent to your email" });
+  }
+  catch(error){
+    console.error("resendOtp error",error.message);
+    res.status(500).json({message:"Could not resend OTP. Please try again."})
   }
  }
 
