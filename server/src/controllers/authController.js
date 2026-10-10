@@ -180,4 +180,33 @@ if (cooldownLeft > 0) {
     res.status(500).json({message:"Could not resend OTP. Please try again."})
   }
  }
+ export const forgotPassword=async(req,res)=>{
+  try{
+const {email}=req.body;
+if(!email){
+  return res.status(400).json({
+    message:"Email is required"
+  })
+}
+const cleanEmail=email.toLowerCase().trim();
+    const genericMessage = "If an account exists for this email, a reset code has been sent.";
+    const user=await User.findOne({email:cleanEmail});
+    if(!user){
+      return res.json({message:genericMessage});
+    }
+    const cooldownLeft=await getCooldownLeft(cleanEmail,"reset");
+    if(cooldownLeft>0){
+      return res.status(429).json({message:`Please wait ${cooldownLeft} seconds before requesting a new code`})
+    }
+    issueOtp(cleanEmail,"reset").catch((error)=>{
+      console.error("forgot password email error:",error.message);
+      
+    })
+    res.json({ message: genericMessage });
+  }
+  catch(error){
+    console.error("forgotPassword error:", error.message);
+    return res.status(500).json({message:"Something went wrong. Please try again."});
+  }
+ }
 
