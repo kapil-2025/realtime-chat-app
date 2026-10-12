@@ -5,9 +5,11 @@ import generateOtp
  from "../utils/generateOtp.js";
  import sendEmail from "../utils/sendEmail.js";
  import generateToken from "../utils/generateToken.js";
+ import { OAuth2Client } from "google-auth-library";
  const MAX_OTP_ATTEMPTS=5;
  const OTP_EXPIRY_MINUTES = 10;
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
+const googleClieant=new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
  const buildAuthResponse=(user)=>({
   token:generateToken(user._id),
   user:{
@@ -58,6 +60,19 @@ if(otpRecord.expiresAt<new Date()){
   }
   return null;
  };
+ const verifyGoogleToken=async(credential)=>{
+  try{
+    const ticket=await googleClieant.verifyIdToken({
+      idToken:credential,audience:process.env.GOOGLE_CLIENT_ID,
+    });
+    return ticket.getPayload();
+
+  }
+  catch(error){
+ console.error("Google token verify failed:", error.message);
+    return null;
+  }
+ }
  export const register = async (req,res)=>{
   try{
 const {name,email,password}=req.body;
@@ -248,4 +263,43 @@ await user.save();
 console.error("resetPassword error: ",error.message)
   }
  }
+ export const googleLogin=async(req,res)=>{
+  try{
+    const{credential}=req.body;
+    if(!credential){
+      return res.status(400).json({message:"Google credential is required"});
+    }
+    const payload=await verifyGoogleToken(credential);
+    if(!payload){
+      return res.status(401).json({message:"Invalid Google token"})
+    }
+    if(!payload.email_verified){
+      return res.status(400).json({message:"Google email is not verified"});
+    }
+    const email =payload.email.toLowerCase();
+    let user=await User.findOne({googleId:payload.sub});
+    if(!user){
+     user=await User.find({email});
+        }
+        if(user){
+          user.googleId=payload.sub;
+user.isVerified=true;
+if(!user.avatar)
+{
+  user.avatar=payload.picture || "";
+  await user.save();
+}    
+else{
+  user=await User.create({
+    name:payload.name|| email.split("@")[0],email,googleId:payload.sub,avatar:payload.picture||"",isVerified:true,
+  });
+}    }
+res.json(buildAuthResponse(user));
+      }
+  catch(error){
+        console.error("googleLogin error:", error.message);
+    res.status(500).json({ message: "Google login failed. Please try again." });
+  }
+ }
+ 
 
