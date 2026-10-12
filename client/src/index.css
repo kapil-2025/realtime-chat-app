@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@theme{
+  --font-display:"Bricolage Grotesque",sans-serif;
+  --font-body: "Figtree", sans-serif;
+
+  --color-paper: #f6f8fd;
+  --color-ink: #1b2240;
+  --color-inland: #2d4aa6;
+  --color-marigold: #f2a20c;
+  --color-leaf: #1f9d6b;
+  --color-danger: #d64545;
+}
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
