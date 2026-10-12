@@ -33,7 +33,31 @@ const secondsPassed=(Date.now()-lastOtp.createdAt.getTime())/1000;
 const secondsLeft=Math.ceil(OTP_RESEND_COOLDOWN_SECONDS-secondsPassed);
 return secondsLeft>0?secondsLeft:0;
 }
- 
+ const checkOtp=async (email,purpose,otp)=>{
+const otpRecord=await Otp.findOne({email,purpose});
+if(!otpRecord){
+  return {status:400,message:"Code expired or not found. Please request a new one. "}
+}
+if(otpRecord.expiresAt<new Date()){
+  await Otp.deleteOne({_id:otpRecord._id});
+  return {status:400,message:"Code expired. Please request a new one."};
+
+}
+
+  if (otpRecord.attempts >= MAX_OTP_ATTEMPTS) {
+    await Otp.deleteOne({ _id: otpRecord._id });
+    return { status: 429, message: "Too many wrong attempts. Please request a new code." };
+  }
+  const isMatch=await bcrypt.compare(String(otp).trim(),otpRecord.otpHash);
+  if(!isMatch){
+    otpRecord.attempts+=1;
+    await otpRecord.save();
+    const attemptsLeft=MAX_OTP_ATTEMPTS-otpRecord.attempts;
+      return { status: 400, message: `Invalid code. ${attemptsLeft} attempts left.` };
+  
+  }
+  return null;
+ };
  export const register = async (req,res)=>{
   try{
 const {name,email,password}=req.body;
@@ -81,26 +105,11 @@ const {email,otp}=req.body;
 if(!email || !otp){
   return res.status(400).json({message:"Email and Otp are required"});
 }
-const cleanEmail=email.toLowerCase().trim();
-const otpRecord=await Otp.findOne({email:cleanEmail,purpose:"register"})
-if(!otpRecord){
-  return res.status(400).json({message:"Otp expired or not found. Please register again"});
-}
-if(otpRecord.expiresAt<new Date()){
-  await Otp.deleteOne({_id:otpRecord._id});
-  return res.status(400).json({message:"Otp expired. Please register again."})
-}
-if(otpRecord.attempts>=MAX_OTP_ATTEMPTS){
-  await Otp.deleteOne({_id:otpRecord._id});
-  return res.status(429).json({message:"Too many requests"})
-}
-const isMatch=await bcrypt.compare(String(otp).trim(),otpRecord.otpHash);
-if(!isMatch){
-  otpRecord.attempts+=1;
-  await otpRecord.save();
-  const attemptsLeft=MAX_OTP_ATTEMPTS-otpRecord.attempts;
-  return res.status(400).json({message:`Invalid Otp. ${attemptsLeft} attempts left.`});
-}
+  const cleanEmail = email.toLowerCase().trim();
+  const otpError=await checkOtp(cleanEmail,"register",otp);
+  if(otpError){
+    return res.status(otpError.status).json({message:otpError.message});
+  }
 const user =await User.findOne({email:cleanEmail});
 if(!user)
 {
@@ -207,6 +216,36 @@ const cleanEmail=email.toLowerCase().trim();
   catch(error){
     console.error("forgotPassword error:", error.message);
     return res.status(500).json({message:"Something went wrong. Please try again."});
+  }
+ }
+ export const resetPassword=async(req,res)=>{
+  try{
+const {email,otp,newPassword}=req.body;
+if(!email || !otp || !newPassword){
+  return res.status(401).json({
+    message:"Email, code and new password are required"
+  });}
+  if(newPassword.length<6){
+    return res.status(400).json({message:"Password must be atleast 6 characters"});
+  
+}
+const cleanEmail=email.toLowerCase().trim();
+const otpError=await checkOtp(cleanEmail,"reset",otp);
+if(otpError){
+  return res.status(otpError.status).json({message:otpError.message});
+}
+const user=await User.findOne({email:cleanEmail});
+if(!user){
+  return res.status(400).json({message:"Code expired or not found. Please request a new one."})
+}
+user.password=await bcrypt.hash(newPassword,10);
+user.isVerifid=true;
+user.passwordChangetAt=new Date(Date.now()-1000);
+await user.save();
+
+  }
+  catch(error){
+console.error("resetPassword error: ",error.message)
   }
  }
 

@@ -11,6 +11,9 @@ const user=await User.findById(decoded.id);
 if(!user){
   return res.status(401).json({message:"User not found"});
 }
+if (user.passwordChangedAt && decoded.iat * 1000 < user.passwordChangedAt.getTime()) {
+      return res.status(401).json({ message: "Password changed recently. Please login again." });
+    }
 req.user=user;
 next();
   }

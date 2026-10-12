@@ -2,11 +2,11 @@ import User from "../models/User.js";
 import Otp from "../models/Otp.js";
 export const getUsers = async (req, res) => {
   try {
-    const users = (
+    const users = 
       await User.find({ _id: { $ne: req.user._id }, isVerified: true }).select(
         "name email avatar",
       )
-    ).sort({ name: 1 });
+    .sort({ name: 1 });
     res.json(users);
   } catch (error) {
     console.error("getusers error", error.message);
