@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { Link,Navigate, useNavigate} from "react-router";
 import { useAuth } from "../context/AuthContext";
+import GoogleButton from "../components/GoogleButton";
 import ServerStatus from "../components/ServerStatus";
 import AuthLayout from "../components/AuthLayout";
 const API_URL = import.meta.env.VITE_API_URL;
@@ -104,7 +105,13 @@ function LoginPage() {
         )}
         <button type="submit"    disabled={loading} className="mt-2 rounded-xl bg-inland px-4 py-3 font-semibold text-white hover:bg-inland/90 disabled:cursor-not-allowed disabled:opacity-60"> {loading ? "Logging in..." : "Log in"}</button>
       </form>                                                              {/* 🆕 Fix 1B */}
+<div className="my-6 flex items-center gap-3 text-xs text-ink/50">
+        <span className="h-px flex-1 bg-ink/10" />
+        or
+        <span className="h-px flex-1 bg-ink/10" />
+      </div>
 
+      <GoogleButton />
       <div className="mt-10">
         <ServerStatus />
       </div>
