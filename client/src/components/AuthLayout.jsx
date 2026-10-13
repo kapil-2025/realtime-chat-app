@@ -1,4 +1,8 @@
+
+
+
 function AuthLayout({ children }) {
+  
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-2">
       <aside className="hidden flex-col justify-between bg-inland p-12 text-white lg:flex">
