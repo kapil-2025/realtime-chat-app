@@ -10,11 +10,13 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [needsVerify,setNeedsVerify]=useState(false);
   const {login}=useAuth();
   const navigate=useNavigate();
     const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setNeedsVerify(false);
     setLoading(true);
 
     try {
@@ -25,6 +27,9 @@ function LoginPage() {
       });
       const data = await res.json();
             if (!res.ok) {
+              if(res.status==403){
+                setNeedsVerify(true);
+              }
         setError(data.message);
         return;
       }
@@ -36,6 +41,18 @@ function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+    const handleVerifyNow = async () => {
+    try {
+      await fetch(`${API_URL}/api/auth/resend-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    } catch (err) {
+      console.error("Resend error:", err);
+    }
+    navigate("/verify-otp", { state: { email } });
   };
   return (
     <AuthLayout>
@@ -75,6 +92,15 @@ function LoginPage() {
           <p role="alert" className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">
             {error}
           </p>
+        )}
+                {needsVerify && (
+          <button
+            type="button"
+            onClick={handleVerifyNow}
+            className="rounded-xl border border-inland px-4 py-3 font-semibold text-inland hover:bg-inland/5"
+          >
+            Verify my email
+          </button>
         )}
         <button type="submit"    disabled={loading} className="mt-2 rounded-xl bg-inland px-4 py-3 font-semibold text-white hover:bg-inland/90 disabled:cursor-not-allowed disabled:opacity-60"> {loading ? "Logging in..." : "Log in"}</button>
       </form>                                                              {/* 🆕 Fix 1B */}

@@ -4,14 +4,15 @@ import RegisterPage from "./pages/RegisterPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 import ChatPage from "./pages/ChatPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import GuestRoute from "./components/GuestRoute";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage></LoginPage>}></Route>
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/verify-otp" element={<VerifyOtpPage />} />
+        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>}></Route>
+        <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+        <Route path="/verify-otp" element={<GuestRoute><VerifyOtpPage /></GuestRoute>} />
         <Route path="/chat" element={<ProtectedRoute>
           <ChatPage></ChatPage>
         </ProtectedRoute>}></Route>
