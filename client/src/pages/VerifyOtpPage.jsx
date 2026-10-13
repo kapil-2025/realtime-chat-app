@@ -1,13 +1,14 @@
-import { useState,useEffect } from "react";
+import { useState,useEffect,useNavigate } from "react";
 import AuthLayout from "../components/AuthLayout";
 import { useAuth } from "../context/AuthContext";
 
-import { useLocation, Navigate } from "react-router";
+import { useLocation, Navigate, replace } from "react-router";
 const API_URL = import.meta.env.VITE_API_URL;
 function VerifyOtpPage() {
   const location = useLocation();
   const email = location.state?.email;
   const {login}=useAuth();
+  const navigate=useNavigate();
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,7 @@ return ()=>clearTimeout(timer);
       }
       setVerified(true);
       login(data);
+      navigate("/chat",{replace:true});
     } catch (error) {
       console.error("Verify error:", error);
       setError("Can't reach the server. Check your connection and try again.");
