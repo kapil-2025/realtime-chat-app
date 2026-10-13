@@ -1,5 +1,6 @@
 import { Link ,useNavigate} from "react-router";
 import ServerStatus from "../components/ServerStatus";
+import AuthLayout from "../components/AuthLayout";
 import { useState } from "react";
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -38,12 +39,12 @@ setError("Cant'reach the server. Check your connection and try again.");
 
   }
   return (
-    <main className="min-h-screen flex flex-col justify-center px-6 sm:px-16">
+   <AuthLayout>
       <h1 className="font-display text-5xl font-extrabold tracking-tight">Create account</h1>
       <p className="mt-3 text-ink/70">
         Already have an account? <Link to="/login" className="font-semibold text-inland underline">Log in</Link>
       </p>
-      <form onSubmit={handleSubmit}  className="mt-8 flex flex-col gap-4 w-full max-w-sm">
+      <form onSubmit={handleSubmit}  className="mt-8 flex flex-col gap-4 ">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="name" className="text-sm font-medium ">Name</label>
           <input type="text" id="name" autoComplete="name" required             value={name}
@@ -81,7 +82,7 @@ setError("Cant'reach the server. Check your connection and try again.");
       <div className="mt-10">
         <ServerStatus />
       </div>
-    </main>
+    </AuthLayout>
   );
 }
 
