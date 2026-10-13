@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import AuthLayout from "../components/AuthLayout";
 
 import { useLocation, Navigate } from "react-router";
@@ -10,6 +10,16 @@ function VerifyOtpPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [secondsLeft,setSecondsLeft]=useState(60);
+  const [resending,setResending]=useState(false);
+  const [info,setInfo]=useState("");
+  useEffect(()=>{if(secondsLeft===0){
+    return;
+  }
+const timer=setTimeout(()=>setSecondsLeft(secondsLeft-1),1000);
+return ()=>clearTimeout(timer);
+
+},[secondsLeft])
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -34,6 +44,34 @@ function VerifyOtpPage() {
       setLoading(false);
     }
   };
+  const handleResend=async()=>{
+    setError("");
+    setInfo("");
+    setResending(true);
+    try{
+      const res = await fetch(`${API_URL}/api/auth/resend-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message);
+        return;
+      }
+      setInfo("A new code is on its way. Check your email.")
+       setOtp("");
+      setSecondsLeft(60);
+    }
+    catch(err){
+      console.error("Resend error:",err);
+      setError("Can't reach the server. Check your connection and try again.")
+    }
+    finally{
+      setResending(false);
+    }
+  }
   if (!email) {
     return <Navigate to="/register" replace />;
   }
@@ -43,7 +81,7 @@ function VerifyOtpPage() {
         Check your email
       </h1>
       <p className="mt-3 text-ink/70">
-        We sent a 6-digit code to{" "}
+        We sent a 6-digit code to {" "}
         <span className="font-semibold text-ink">{email}</span>
       </p>
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
@@ -70,6 +108,11 @@ function VerifyOtpPage() {
             {error}
           </p>
         )}
+                {info && (
+          <p className="rounded-xl bg-inland/10 px-4 py-3 text-sm text-inland">
+            {info}
+          </p>
+        )}
         {verified && (
           <p className="rounded-xl bg-leaf/10 px-4 py-3 text-sm text-leaf">
             Email verified! You're all set.
@@ -83,6 +126,11 @@ function VerifyOtpPage() {
           {loading ? "Verifying..." : "Verify email"}
         </button>
       </form>
+      {!verified &&   <p className="mt-6 text-sm text-ink/70"> Didn't get the code? {secondsLeft>0? (<span className="font-medium"> Resend in {secondsLeft}s</span>):(
+        <button type="button" onClick={handleResend}  disabled={resending}  className="font-semibold text-inland underline">   {resending ? "Sending..." : "Resend code"}</button>
+      )}
+      </p>}
+    
     </AuthLayout>
   );
 }
