@@ -1,6 +1,7 @@
 import { Link ,useNavigate} from "react-router";
 import ServerStatus from "../components/ServerStatus";
 import AuthLayout from "../components/AuthLayout";
+import GoogleButton from "../components/GoogleButton";
 import { useState } from "react";
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -79,6 +80,13 @@ setError("Cant'reach the server. Check your connection and try again.");
         {error && <p role="alert " className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p>}
         <button type="submit" disabled={loading} className="mt-2 rounded-xl bg-inland px-4 py-3 font-semibold text-white hover:bg-inland/90 disabled:cursor-not-allowed disabled:opacity-60">{loading ? "Creating account..." : "Create account"}</button>
       </form>
+            <div className="my-6 flex items-center gap-3 text-xs text-ink/50">
+        <span className="h-px flex-1 bg-ink/10" />
+        or
+        <span className="h-px flex-1 bg-ink/10" />
+      </div>
+
+      <GoogleButton text="signup_with" />
       <div className="mt-10">
         <ServerStatus />
       </div>

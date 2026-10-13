@@ -263,43 +263,52 @@ await user.save();
 console.error("resetPassword error: ",error.message)
   }
  }
- export const googleLogin=async(req,res)=>{
-  try{
-    const{credential}=req.body;
-    if(!credential){
-      return res.status(400).json({message:"Google credential is required"});
+export const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ message: "Google credential is required" });
     }
-    const payload=await verifyGoogleToken(credential);
-    if(!payload){
-      return res.status(401).json({message:"Invalid Google token"})
+
+    const payload = await verifyGoogleToken(credential);
+
+    if (!payload) {
+      return res.status(401).json({ message: "Invalid Google token" });
     }
-    if(!payload.email_verified){
-      return res.status(400).json({message:"Google email is not verified"});
+
+    if (!payload.email_verified) {
+      return res.status(400).json({ message: "Google email is not verified" });
     }
-    const email =payload.email.toLowerCase();
-    let user=await User.findOne({googleId:payload.sub});
-    if(!user){
-     user=await User.find({email});
-        }
-        if(user){
-          user.googleId=payload.sub;
-user.isVerified=true;
-if(!user.avatar)
-{
-  user.avatar=payload.picture || "";
-  await user.save();
-}    
-else{
-  user=await User.create({
-    name:payload.name|| email.split("@")[0],email,googleId:payload.sub,avatar:payload.picture||"",isVerified:true,
-  });
-}    }
-res.json(buildAuthResponse(user));
+
+    const email = payload.email.toLowerCase();
+
+    let user = await User.findOne({ googleId: payload.sub });
+
+    if (!user) {
+      user = await User.findOne({ email });
+
+      if (user) {
+        user.googleId = payload.sub;
+        user.isVerified = true;
+        if (!user.avatar) user.avatar = payload.picture || "";
+        await user.save();
+      } else {
+        user = await User.create({
+          name: payload.name || email.split("@")[0],
+          email,
+          googleId: payload.sub,
+          avatar: payload.picture || "",
+          isVerified: true,
+        });
       }
-  catch(error){
-        console.error("googleLogin error:", error.message);
+    }
+
+    res.json(buildAuthResponse(user));
+  } catch (error) {
+    console.error("googleLogin error:", error.message);
     res.status(500).json({ message: "Google login failed. Please try again." });
   }
- }
+};
  
 
