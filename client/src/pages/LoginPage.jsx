@@ -14,6 +14,8 @@ function LoginPage() {
   const [needsVerify,setNeedsVerify]=useState(false);
   const {login}=useAuth();
   const navigate=useNavigate();
+    const location = useLocation();
+  const successMessage = location.state?.message;
     const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -61,7 +63,11 @@ function LoginPage() {
       <p className="mt-3 text-ink/70">
         New here? <Link to="/register" className="font-semibold text-inland underline">Create an account</Link>
       </p>
-
+      {successMessage && (
+        <p className="mt-6 rounded-xl bg-leaf/10 px-4 py-3 text-sm text-leaf">
+          {successMessage}
+        </p>
+      )}
       <form  onSubmit={handleSubmit}  className="mt-8 flex flex-col gap-4">                         {/* 🆕 Fix 1A */}
         <div className="flex flex-col gap-1.5">
           <label htmlFor="email" className="text-sm font-medium">Email</label>
