@@ -233,36 +233,44 @@ const cleanEmail=email.toLowerCase().trim();
     return res.status(500).json({message:"Something went wrong. Please try again."});
   }
  }
- export const resetPassword=async(req,res)=>{
-  try{
-const {email,otp,newPassword}=req.body;
-if(!email || !otp || !newPassword){
-  return res.status(401).json({
-    message:"Email, code and new password are required"
-  });}
-  if(newPassword.length<6){
-    return res.status(400).json({message:"Password must be atleast 6 characters"});
-  
-}
-const cleanEmail=email.toLowerCase().trim();
-const otpError=await checkOtp(cleanEmail,"reset",otp);
-if(otpError){
-  return res.status(otpError.status).json({message:otpError.message});
-}
-const user=await User.findOne({email:cleanEmail});
-if(!user){
-  return res.status(400).json({message:"Code expired or not found. Please request a new one."})
-}
-user.password=await bcrypt.hash(newPassword,10);
-user.isVerifid=true;
-user.passwordChangetAt=new Date(Date.now()-1000);
-await user.save();
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
 
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: "Email, code and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    const otpError = await checkOtp(cleanEmail, "reset", otp);
+    if (otpError) {
+      return res.status(otpError.status).json({ message: otpError.message });
+    }
+
+    const user = await User.findOne({ email: cleanEmail });
+
+    if (!user) {
+      return res.status(400).json({ message: "Code expired or not found. Please request a new one." });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.isVerified = true;
+    user.passwordChangedAt = new Date(Date.now() - 1000);
+    await user.save();
+
+    await Otp.deleteMany({ email: cleanEmail, purpose: "reset" });
+
+    res.json({ message: "Password reset successful. Please login with your new password." });
+  } catch (error) {
+    console.error("resetPassword error:", error.message);
+    res.status(500).json({ message: "Could not reset password. Please try again." });
   }
-  catch(error){
-console.error("resetPassword error: ",error.message)
-  }
- }
+};
 export const googleLogin = async (req, res) => {
   try {
     const { credential } = req.body;

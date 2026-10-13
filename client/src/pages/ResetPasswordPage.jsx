@@ -1,5 +1,5 @@
 
-import { useState } from "react";import AuthLayout from "../components/AuthLayout";
+import { useState,useEffect } from "react";import AuthLayout from "../components/AuthLayout";
 import { useLocation, Navigate ,useNavigate} from "react-router";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -11,7 +11,15 @@ function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+    const [secondsLeft, setSecondsLeft] = useState(60);
+  const [resending, setResending] = useState(false);
+  const [info, setInfo] = useState("");
     const navigate = useNavigate();
+      useEffect(() => {
+    if (secondsLeft === 0) return;
+    const timer = setTimeout(() => setSecondsLeft(secondsLeft - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [secondsLeft]);
     const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -44,6 +52,34 @@ function ResetPasswordPage() {
       setError("Can't reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
+    }
+  };
+    const handleResend = async () => {
+    setError("");
+    setInfo("");
+    setResending(true);
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message);
+        return;
+      }
+
+      setInfo("If an account exists, a new code is on its way.");
+      setOtp("");
+      setSecondsLeft(60);
+    } catch (err) {
+      console.error("Resend reset code error:", err);
+      setError("Can't reach the server. Check your connection and try again.");
+    } finally {
+      setResending(false);
     }
   };
     if (!email) {
@@ -100,6 +136,11 @@ function ResetPasswordPage() {
             {error}
           </p>
         )}
+                {info && (
+          <p className="rounded-xl bg-inland/10 px-4 py-3 text-sm text-inland">
+            {info}
+          </p>
+        )}
                 <button
           type="submit"  disabled={loading || otp.length !== 6}
           className="mt-2 rounded-xl bg-inland px-4 py-3 font-semibold text-white hover:bg-inland/90 disabled:cursor-not-allowed disabled:opacity-60"
@@ -107,6 +148,21 @@ function ResetPasswordPage() {
            {loading ? "Resetting..." : "Reset password"}
         </button>
       </form>
+            <p className="mt-6 text-sm text-ink/70">
+        Didn't get the code?{" "}
+        {secondsLeft > 0 ? (
+          <span className="font-medium">Resend in {secondsLeft}s</span>
+        ) : (
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={resending}
+            className="font-semibold text-inland underline disabled:opacity-60"
+          >
+            {resending ? "Sending..." : "Resend code"}
+          </button>
+        )}
+      </p>
     </AuthLayout>
   );
 }

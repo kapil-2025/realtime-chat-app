@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Link,Navigate, useNavigate} from "react-router";
+import { Link,Navigate,useLocation, useNavigate} from "react-router";
 import { useAuth } from "../context/AuthContext";
 import GoogleButton from "../components/GoogleButton";
 import ServerStatus from "../components/ServerStatus";
