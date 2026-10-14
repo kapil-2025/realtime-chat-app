@@ -6,7 +6,9 @@ import helmet from "helmet";
 import connectDB from './src/config/db.js';
 import { protect } from './src/middleware/authMiddleware.js';
 import   userRoutes from "./src/routes/userRoutes.js"
+
 import authRoutes from './src/routes/authRoutes.js';
+import messageRoutes from "./src/routes/messageRoutes.js";
 import { authLimiter } from './src/middleware/rateLimiter.js';
 import { notFound, errorHandler } from "./src/middleware/errorMiddleware.js";
 const app = express();
@@ -21,6 +23,7 @@ res.json({message:"Chat Api is running"});
 });
 app.use("/api/auth",authLimiter,authRoutes );
 app.use("/api/users",userRoutes);
+app.use("/api/messages", messageRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
