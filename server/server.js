@@ -6,6 +6,7 @@ import { protect } from './src/middleware/authMiddleware.js';
 import   userRoutes from "./src/routes/userRoutes.js"
 import authRoutes from './src/routes/authRoutes.js';
 import { authLimiter } from './src/middleware/rateLimiter.js';
+import { notFound, errorHandler } from "./src/middleware/errorMiddleware.js";
 const app = express();
 
 const PORT=process.env.PORT || 5000;
@@ -18,6 +19,8 @@ res.json({message:"Chat Api is running"});
 });
 app.use("/api/auth",authLimiter,authRoutes );
 app.use("/api/users",userRoutes);
+app.use(notFound);
+app.use(errorHandler);
 
 await connectDB();
 app.listen(PORT,()=>{console.log(` Server is running on port ${PORT}`)}
