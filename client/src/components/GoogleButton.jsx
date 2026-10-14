@@ -2,7 +2,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
-const API_URL = import.meta.env.VITE_API_URL;
+import { apiRequest } from "../lib/api";
 function GoogleButton({text="continue_with"}) {
     const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12,24 +12,15 @@ function GoogleButton({text="continue_with"}) {
     setError("");
     setLoading(true);
 
-    try {
-      const res = await fetch(`${API_URL}/api/auth/google`, {
+        try {
+      const data = await apiRequest("/api/auth/google", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential: response.credential }),
+        body: { credential: response.credential },
       });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message);
-        return;
-      }
-
       login(data);
       navigate("/chat", { replace: true });
     } catch (err) {
-      console.error("Google login error:", err);
-      setError("Can't reach the server. Check your connection and try again.");
+      setError(err.message);
     } finally {
       setLoading(false);
     }

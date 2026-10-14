@@ -1,34 +1,23 @@
 import AuthLayout from "../components/AuthLayout";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { apiRequest } from "../lib/api";
 
-const API_URL = import.meta.env.VITE_API_URL;
 function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const handleSubmit = async (e) => {
+      const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message);
-        return;
-      }
-            navigate("/reset-password", { state: { email } });
+      await apiRequest("/api/auth/forgot-password", { method: "POST", body: { email } });
+      navigate("/reset-password", { state: { email } });
     } catch (err) {
-      console.error("Forgot password error:", err);
-      setError("Can't reach the server. Check your connection and try again.");
+      setError(err.message);
     } finally {
       setLoading(false);
     }

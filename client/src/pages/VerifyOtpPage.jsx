@@ -4,7 +4,7 @@ import AuthLayout from "../components/AuthLayout";
 import { useAuth } from "../context/AuthContext";
 import { useCountdown } from "../hooks/useCountdown";
 import { useLocation, Navigate, replace } from "react-router";
-const API_URL = import.meta.env.VITE_API_URL;
+import { apiRequest } from "../lib/api";
 function VerifyOtpPage() {
   const location = useLocation();
   const email = location.state?.email;
@@ -22,23 +22,16 @@ function VerifyOtpPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
+        try {
+      const data = await apiRequest("/api/auth/verify-otp", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
+        body: { email, otp },
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message);
-        return;
-      }
       setVerified(true);
       login(data);
-      navigate("/chat",{replace:true});
-    } catch (error) {
-      console.error("Verify error:", error);
-      setError("Can't reach the server. Check your connection and try again.");
+      navigate("/chat", { replace: true });
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -47,27 +40,14 @@ function VerifyOtpPage() {
     setError("");
     setInfo("");
     setResending(true);
-    try{
-      const res = await fetch(`${API_URL}/api/auth/resend-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message);
-        return;
-      }
-      setInfo("A new code is on its way. Check your email.")
-       setOtp("");
-       restart();
-    }
-    catch(err){
-      console.error("Resend error:",err);
-      setError("Can't reach the server. Check your connection and try again.")
-    }
-    finally{
+       try {
+      await apiRequest("/api/auth/resend-otp", { method: "POST", body: { email } });
+      setInfo("A new code is on its way. Check your email.");
+      setOtp("");
+      restart();
+    } catch (err) {
+      setError(err.message);
+    } finally {
       setResending(false);
     }
   }

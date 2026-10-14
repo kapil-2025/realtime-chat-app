@@ -2,8 +2,8 @@
 import { useState} from "react";import AuthLayout from "../components/AuthLayout";
 import { useCountdown } from "../hooks/useCountdown";
 import { useLocation, Navigate ,useNavigate} from "react-router";
+import { apiRequest } from "../lib/api";
 
-const API_URL = import.meta.env.VITE_API_URL;
 function ResetPasswordPage() {
     const location = useLocation();
   const email = location.state?.email;
@@ -28,25 +28,17 @@ function ResetPasswordPage() {
 
     setLoading(true);
 
-    try {
-      const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+        try {
+      await apiRequest("/api/auth/reset-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp, newPassword }),
+        body: { email, otp, newPassword },
       });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message);
-        return;
-      }
-            navigate("/login", {
+      navigate("/login", {
         replace: true,
         state: { message: "Password updated. Log in with your new password." },
       });
     } catch (err) {
-      console.error("Reset password error:", err);
-      setError("Can't reach the server. Check your connection and try again.");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -56,25 +48,13 @@ function ResetPasswordPage() {
     setInfo("");
     setResending(true);
 
-    try {
-      const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message);
-        return;
-      }
-
+       try {
+      await apiRequest("/api/auth/forgot-password", { method: "POST", body: { email } });
       setInfo("If an account exists, a new code is on its way.");
       setOtp("");
-                restart();
+      restart();
     } catch (err) {
-      console.error("Resend reset code error:", err);
-      setError("Can't reach the server. Check your connection and try again.");
+      setError(err.message);
     } finally {
       setResending(false);
     }
