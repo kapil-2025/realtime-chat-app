@@ -3,7 +3,7 @@ import ServerStatus from "../components/ServerStatus";
 import AuthLayout from "../components/AuthLayout";
 import GoogleButton from "../components/GoogleButton";
 import { useState } from "react";
-const API_URL = import.meta.env.VITE_API_URL;
+import { apiRequest } from "../lib/api";
 
 function RegisterPage() {
   const [name, setName]=useState("");
@@ -13,32 +13,23 @@ function RegisterPage() {
   const [loading,setLoading]=useState(false);
   const navigate=useNavigate();
 
-  const handleSubmit =async(e)=>{
+   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    try{
-const res=await fetch(`${API_URL}/api/auth/register`,{method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({name,email,password})
 
-});
-const data= await res.json();
-if(!res.ok){
-  setError(data.message);
-  return;
-}
-navigate("/verify-otp",{state:{email}});
-
+    try {
+      await apiRequest("/api/auth/register", {
+        method: "POST",
+        body: { name, email, password },
+      });
+      navigate("/verify-otp", { state: { email } });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    catch(error){
-      console.error("Register error:",error)
-setError("Cant'reach the server. Check your connection and try again.");
-    }
-    finally{
-  setLoading(false);
-}
-
-  }
+  };
   return (
    <AuthLayout>
       <h1 className="font-display text-5xl font-extrabold tracking-tight">Create account</h1>

@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import GoogleButton from "../components/GoogleButton";
 import ServerStatus from "../components/ServerStatus";
 import AuthLayout from "../components/AuthLayout";
-const API_URL = import.meta.env.VITE_API_URL;
+import { apiRequest } from "../lib/api";
 function LoginPage() {
     const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,42 +16,30 @@ function LoginPage() {
   const navigate=useNavigate();
     const location = useLocation();
   const successMessage = location.state?.message;
-    const handleSubmit = async (e) => {
+     const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setNeedsVerify(false);
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
+      const data = await apiRequest("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: { email, password },
       });
-      const data = await res.json();
-            if (!res.ok) {
-              if(res.status==403){
-                setNeedsVerify(true);
-              }
-        setError(data.message);
-        return;
-      }
       login(data);
-      navigate("/chat",{replace:true})
+      navigate("/chat", { replace: true });
     } catch (err) {
-      console.error("Login error:", err);
-      setError("Can't reach the server. Check your connection and try again.");
+      if (err.status === 403) setNeedsVerify(true);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+    
     const handleVerifyNow = async () => {
     try {
-      await fetch(`${API_URL}/api/auth/resend-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      await apiRequest("/api/auth/resend-otp", { method: "POST", body: { email } });
     } catch (err) {
       console.error("Resend error:", err);
     }
