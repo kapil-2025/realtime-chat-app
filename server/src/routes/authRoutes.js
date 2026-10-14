@@ -1,7 +1,9 @@
 import express from "express";
 import { register,verifyOtp,login,resendOtp,forgotPassword,resetPassword,googleLogin } from "../controllers/authController.js";
+import { validate } from "../middleware/validate.js";
+import { registerSchema } from "../validators/authSchemas.js";
 const router=express.Router();
-router.post("/register",register);
+router.post("/register",validate(registerSchema),register);
 router.post("/verify-otp",verifyOtp);
 router.post("/login",login);
 router.post("/resend-otp",resendOtp);
