@@ -1,6 +1,8 @@
 import express from 'express';
+
 import cors from 'cors';
 import helmet from "helmet";
+
 import connectDB from './src/config/db.js';
 import { protect } from './src/middleware/authMiddleware.js';
 import   userRoutes from "./src/routes/userRoutes.js"
