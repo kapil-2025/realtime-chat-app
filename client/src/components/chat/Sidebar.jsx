@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { apiRequest } from "../../lib/api";
 
-function Sidebar() {
+function Sidebar({onSelect,selectedId}) {
   const { user, token, logout } = useAuth();
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -24,7 +24,7 @@ function Sidebar() {
   }, [token]);
 
   return (
-    <aside className="flex w-full flex-col border-r border-ink/10 bg-white md:w-80">
+        <aside className={`${selectedId ? "hidden md:flex" : "flex"} w-full flex-col border-r border-ink/10 bg-white md:w-80`}>
       <header className="flex items-center justify-between border-b border-ink/10 px-4 py-3">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-inland font-semibold text-white">
@@ -32,7 +32,7 @@ function Sidebar() {
           </span>
           <span className="truncate font-semibold">{user?.name}</span>
         </div>
-        <button
+               <button
           type="button"
           onClick={logout}
           className="text-sm font-semibold text-ink/60 hover:text-danger"
@@ -71,9 +71,12 @@ function Sidebar() {
         <ul>
           {users.map((person) => (
             <li key={person._id}>
-              <button
+                         <button
                 type="button"
-                className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-paper"
+                onClick={() => onSelect(person)}
+                className={`flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left ${
+                  selectedId === person._id ? "bg-inland/10" : "hover:bg-paper"
+                }`}
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink/10 font-semibold text-ink">
                   {person.name.charAt(0).toUpperCase()}
