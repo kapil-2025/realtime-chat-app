@@ -1,7 +1,8 @@
-import { useState,useEffect,useNavigate } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router";
 import AuthLayout from "../components/AuthLayout";
 import { useAuth } from "../context/AuthContext";
-
+import { useCountdown } from "../hooks/useCountdown";
 import { useLocation, Navigate, replace } from "react-router";
 const API_URL = import.meta.env.VITE_API_URL;
 function VerifyOtpPage() {
@@ -13,16 +14,10 @@ function VerifyOtpPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
-  const [secondsLeft,setSecondsLeft]=useState(60);
+    const { secondsLeft, restart } = useCountdown(60);
   const [resending,setResending]=useState(false);
   const [info,setInfo]=useState("");
-  useEffect(()=>{if(secondsLeft===0){
-    return;
-  }
-const timer=setTimeout(()=>setSecondsLeft(secondsLeft-1),1000);
-return ()=>clearTimeout(timer);
-
-},[secondsLeft])
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -66,7 +61,7 @@ return ()=>clearTimeout(timer);
       }
       setInfo("A new code is on its way. Check your email.")
        setOtp("");
-      setSecondsLeft(60);
+       restart();
     }
     catch(err){
       console.error("Resend error:",err);

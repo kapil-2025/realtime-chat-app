@@ -1,5 +1,6 @@
 
-import { useState,useEffect } from "react";import AuthLayout from "../components/AuthLayout";
+import { useState} from "react";import AuthLayout from "../components/AuthLayout";
+import { useCountdown } from "../hooks/useCountdown";
 import { useLocation, Navigate ,useNavigate} from "react-router";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -11,15 +12,11 @@ function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-    const [secondsLeft, setSecondsLeft] = useState(60);
+    const { secondsLeft, restart } = useCountdown(60);
   const [resending, setResending] = useState(false);
   const [info, setInfo] = useState("");
     const navigate = useNavigate();
-      useEffect(() => {
-    if (secondsLeft === 0) return;
-    const timer = setTimeout(() => setSecondsLeft(secondsLeft - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [secondsLeft]);
+    
     const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -74,7 +71,7 @@ function ResetPasswordPage() {
 
       setInfo("If an account exists, a new code is on its way.");
       setOtp("");
-      setSecondsLeft(60);
+                restart();
     } catch (err) {
       console.error("Resend reset code error:", err);
       setError("Can't reach the server. Check your connection and try again.");
