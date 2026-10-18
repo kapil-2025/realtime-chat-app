@@ -4,12 +4,12 @@ const messsageSchema= new mongoose.Schema({
 sender:{
   type:mongoose.Schema.Types.ObjectId,ref:"User",required:true,
 },
-reciever:{
+receiver:{
   type:mongoose.Schema.Types.ObjectId,ref:"User",required:true,
 },text:{
   type:String,required:true,trim:true,maxLength:2000,
 },
 },{timestamps:true});
-messsageSchema.index({sender:1,reciever:1,createdAt:1});
+messsageSchema.index({sender:1,receiver:1,createdAt:1});
 const Message=mongoose.model("Message",messsageSchema);
 export default Message;
