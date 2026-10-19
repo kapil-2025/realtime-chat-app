@@ -1,3 +1,6 @@
+import http from "http"
+
+
 import express from 'express';
 
 import cors from 'cors';
@@ -11,6 +14,7 @@ import authRoutes from './src/routes/authRoutes.js';
 import messageRoutes from "./src/routes/messageRoutes.js";
 import { authLimiter } from './src/middleware/rateLimiter.js';
 import { notFound, errorHandler } from "./src/middleware/errorMiddleware.js";
+import { initSocket } from "./src/socket/index.js";
 const app = express();
 
 const PORT=process.env.PORT || 5000;
@@ -26,8 +30,10 @@ app.use("/api/users",userRoutes);
 app.use("/api/messages", messageRoutes);
 app.use(notFound);
 app.use(errorHandler);
-
+const server=http.createServer(app);
+const io = initSocket(server,allowedOrigins);
+app.set("io",io);
 await connectDB();
-app.listen(PORT,()=>{console.log(` Server is running on port ${PORT}`)}
+server.listen(PORT,()=>{console.log(` Server is running on port ${PORT}`)}
 );
 
