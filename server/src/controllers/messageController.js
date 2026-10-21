@@ -20,7 +20,8 @@ export const sendMessage = async (req, res) => {
       receiver: receiverId,
       text,
     });
-
+const io =req.app.get("io");
+io.to(receiverId).to(req.user._id.toString()).emit("message:new",message);
     res.status(201).json(message);
   } catch (error) {
     console.error("sendMessage error:", error.message);
