@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useSocket } from "../../context/SocketContext";
 import { apiRequest } from "../../lib/api";
 
 const formatTime = (date) =>
   new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
+const addUnique = (list, msg) =>
+  list.some((m) => m._id === msg._id) ? list : [...list, msg];
 function ChatWindow({ selectedUser, onBack }) {
   const { user, token } = useAuth();
+  const socket=useSocket();
   const [text, setText] = useState("");
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -42,6 +45,21 @@ function ChatWindow({ selectedUser, onBack }) {
   }, [selectedId, token]);
 
   useEffect(() => {
+    if (!socket || !selectedId) return;
+
+    const handleNew = (msg) => {
+      const belongsHere = msg.sender === selectedId || msg.receiver === selectedId;
+      if (!belongsHere) return;
+      setMessages((prev) => addUnique(prev, msg));
+    };
+
+    socket.on("message:new", handleNew);
+
+    return () => {
+      socket.off("message:new", handleNew);
+    };
+  }, [socket, selectedId]);
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -58,7 +76,7 @@ function ChatWindow({ selectedUser, onBack }) {
         body: { receiverId: selectedUser._id, text: message },
         token,
       });
-      setMessages((prev) => [...prev, newMessage]);
+          setMessages((prev) => addUnique(prev, newMessage));
       setText("");
     } catch (err) {
       setSendError(err.message);
