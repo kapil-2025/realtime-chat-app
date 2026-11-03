@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
       default: "",
-    },passwordChangetAt:{
+    },passwordChangedAt:{
       type:Date,
     },
   },

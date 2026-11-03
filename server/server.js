@@ -16,7 +16,7 @@ import { authLimiter } from './src/middleware/rateLimiter.js';
 import { notFound, errorHandler } from "./src/middleware/errorMiddleware.js";
 import { initSocket } from "./src/socket/index.js";
 const app = express();
-
+app.set("trust proxy", 1);
 const PORT=process.env.PORT || 5000;
 const allowedOrigins=(process.env.CLIENT_URL || "http://localhost:5173").split(",");
 app.use(helmet());
