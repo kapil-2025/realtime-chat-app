@@ -3,6 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 import ChatPage from "./pages/ChatPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -12,18 +13,18 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>}></Route>
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
         <Route path="/verify-otp" element={<GuestRoute><VerifyOtpPage /></GuestRoute>} />
-                <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
+        <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
         <Route path="/reset-password" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
-        <Route path="/chat" element={<ProtectedRoute>
-          <ChatPage></ChatPage>
-        </ProtectedRoute>}></Route>
-        <Route path="/" element={<Navigate to="/chat" replace />}></Route>
-                <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+        <Route path="/" element={<Navigate to="/chat" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
+
 export default App;
