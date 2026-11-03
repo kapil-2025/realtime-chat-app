@@ -83,7 +83,7 @@ function Sidebar({onSelect,selectedId}) {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-semibold">{person.name}</span>
-                  <span className="block truncate text-sm text-ink/60">{person.email}</span>
+                  
                 </span>
               </button>
             </li>

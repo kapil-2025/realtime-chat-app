@@ -115,7 +115,7 @@ function ChatWindow({ selectedUser, onBack }) {
         </span>
         <div className="min-w-0">
           <p className="truncate font-semibold">{selectedUser.name}</p>
-          <p className="truncate text-sm text-ink/60">{selectedUser.email}</p>
+         
         </div>
       </header>
 

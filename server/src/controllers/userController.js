@@ -4,7 +4,7 @@ export const getUsers = async (req, res) => {
   try {
     const users = 
       await User.find({ _id: { $ne: req.user._id }, isVerified: true }).select(
-        "name email avatar",
+        "name  avatar",
       )
     .sort({ name: 1 });
     res.json(users);

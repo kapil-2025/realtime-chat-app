@@ -40,7 +40,7 @@ To see real-time messaging, log in with two accounts — one in a normal window 
 - **Authenticated WebSockets** — the JWT is verified in Socket.IO middleware during the handshake, and each user joins a private room named after their user ID, so every device they are logged in on receives new messages.
 - **Duplicate-free rendering** — the sender receives their own message twice (HTTP response + socket event); the client de-duplicates by message `_id`, so it appears exactly once.
 - **Race-condition-safe chat switching** — an `ignore` flag in the `useEffect` cleanup discards late responses when the user switches chats quickly, so one person's messages never show up in another person's chat.
-- **OTP & auth security** — OTPs are hashed, auto-expire with a MongoDB TTL index, allow limited attempts and have a resend cooldown; login returns the same error for a wrong email or wrong password (no user enumeration); resetting a password invalidates old tokens.
+- **OTP & auth security** — OTPs are hashed, auto-expire with a MongoDB TTL index, allow limited attempts and have a resend cooldown; login returns the same error for a wrong email or wrong password; resetting a password invalidates old tokens.
 - **Production-ready deployment** — `trust proxy` for real client IPs behind Render's proxy (correct rate limiting), SPA rewrites on Vercel, and one CORS allowlist shared by Express and Socket.IO.
 - **Indexed queries** — a compound index on `{ sender, receiver, createdAt }` keeps loading a conversation's latest 50 messages fast.
 
